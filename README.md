@@ -9,8 +9,11 @@
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.45-C5F74F)](https://orm.drizzle.team/)
 [![Neon Postgres](https://img.shields.io/badge/Neon-Serverless_Postgres-00E599?logo=postgresql)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A high-performance **3D Warehouse Layout Builder & Spatial Warehouse Management System (WMS)** built for industrial logistics and supply chain digital twins. Design warehouse floors, manipulate procedural racking structures, simulate automated multi-vehicle fleet picking routes, and analyze inventory velocity heatmaps in real-time WebGL.
+
+![3D Warehouse Interactive Editor](docs/assets/editor-3d-preview.png)
 
 ---
 
@@ -23,6 +26,14 @@ A high-performance **3D Warehouse Layout Builder & Spatial Warehouse Management 
 - **Enterprise WMS & Spatial Analytics**: Real-time bin occupancy tracking (`Aisle-Bay-Level-Slot`), max load capacity checking ($1{,}000\text{ kg} / \text{slot}$), ABC velocity heatmaps, and REST API routes for external ERP/WMS synchronization.
 - **CAD-Grade Editor & Command Pattern**: Marquee box selection, AABB collision detection, face-to-face snapping, grid alignment ($0.5\text{ m} / 1.0\text{ m}$), and infinite transactional Undo / Redo history.
 - **Role-Based Access Control (RBAC)**: Secure HTTP-Only session authentication with tiered roles (`ADMIN`, `EDITOR`, `VIEWER`) and audit trail tracking.
+
+---
+
+## 🖼️ Application Showcase
+
+| Facility Dashboard | Spatial WMS 3D Editor |
+|:---:|:---:|
+| ![Dashboard Preview](docs/assets/dashboard-preview.png) | ![3D Editor Preview](docs/assets/editor-3d-preview.png) |
 
 ---
 
@@ -49,7 +60,7 @@ A high-performance **3D Warehouse Layout Builder & Spatial Warehouse Management 
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/3d-warehouse.git
+git clone https://github.com/twiners212/3d-warehouse.git
 cd 3d-warehouse
 
 # Install dependencies
@@ -88,7 +99,7 @@ Default seed credentials:
 - **Editor**: `editor@warehouse.local` / `editor12345`
 - **Viewer**: `viewer@warehouse.local` / `viewer12345`
 
-### 6. Production Build
+### 6. Production Build & Deployment
 ```bash
 # Run typechecking
 npm run typecheck
@@ -100,6 +111,13 @@ npm run build
 npm run start
 ```
 
+#### Deploying to Vercel
+1. Import repository on [Vercel](https://vercel.com).
+2. Configure Environment Variables in project settings:
+   - `DATABASE_URL`: Your production Neon PostgreSQL connection string.
+   - `WMS_API_KEY`: Secret Bearer token for external WMS integrations.
+3. Deploy! Next.js 16 App Router and Server Actions will be configured automatically.
+
 ---
 
 ## 📁 Project Structure
@@ -108,6 +126,7 @@ npm run start
 3d-warehouse/
 ├── drizzle/              # Drizzle ORM migration files & schema snapshots
 ├── docs/                 # Detailed technical specifications & manuals
+│   ├── assets/           # High-resolution application screenshots
 │   ├── architecture.md   # Architectural design, data flow & rendering pipeline
 │   ├── data-model.md     # Relational schema & Drizzle ORM tables
 │   ├── spatial-model.md  # 3D coordinate mathematics & raycasting
@@ -165,4 +184,4 @@ npm run test:rbac
 
 ## 📄 License
 
-MIT License. Designed and engineered for industrial digital twin applications.
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
