@@ -10,8 +10,17 @@
 [![Neon Postgres](https://img.shields.io/badge/Neon-Serverless_Postgres-00E599?logo=postgresql)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-3d--warehouse--nu.vercel.app-00E599?logo=vercel&style=for-the-badge)](https://3d-warehouse-nu.vercel.app)
 
 A high-performance **3D Warehouse Layout Builder & Spatial Warehouse Management System (WMS)** built for industrial logistics and supply chain digital twins. Design warehouse floors, manipulate procedural racking structures, simulate automated multi-vehicle fleet picking routes, and analyze inventory velocity heatmaps in real-time WebGL.
+
+🔗 **Live Production Demo:** [https://3d-warehouse-nu.vercel.app](https://3d-warehouse-nu.vercel.app)
+
+> [!TIP]
+> **Demo Login Credentials:**  
+> - **Administrator**: `admin@warehouse.local` / `admin12345`  
+> - **Warehouse Planner**: `editor@warehouse.local` / `editor12345`  
+> - **Auditor (Read-Only)**: `viewer@warehouse.local` / `viewer12345`
 
 ![3D Warehouse Interactive Editor](docs/assets/editor-3d-preview.png)
 
