@@ -30,6 +30,18 @@ jobs:
       - name: Linting & Static Checks
         run: npm run lint
 
+      - name: Run Domain Smoke Tests
+        run: |
+          npm run test:snapping
+          npm run test:store
+          npm run test:wms
+          npm run test:heatmap
+          npm run test:hitboxes
+          npm run test:settings
+          npm run test:aisle
+          npm run test:picking
+          npm run test:fleet
+
       - name: Production Build Verification
         env:
           DATABASE_URL: "postgresql://ci_dummy:dummy@localhost:5432/dummy"

@@ -9,10 +9,9 @@
 // node-postgres (local dev DB) runs inside a real transaction.
 
 import { count, eq, asc } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import { db, supportsTransactions } from '@/db';
+import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { BIN_BATCH_CHUNK_SIZE, generateMockSkuData } from '@/lib/constants/warehouse-defaults';
 import { generateBinId } from '@/engine/procedural/bin-generator';
@@ -20,9 +19,6 @@ import { WarehouseBlueprintSchema } from '@/lib/validations/layout-schema';
 import type { WarehouseLayoutBlueprint } from '@/types/layout';
 import { getAuthSession } from '@/lib/auth/session';
 import type { SessionData } from '@/lib/auth/types';
-
-type Database = typeof db;
-type Executor = Database | NodePgDatabase<typeof schema>;
 
 /**
  * Resolves the authenticated session.
@@ -76,19 +72,6 @@ async function resolveActionSession(
   return null;
 }
 
-/**
- * Runs fn in a real transaction when the driver supports it (node-postgres).
- * neon-http throws on db.transaction(), so it falls back to sequential
- * batched statements — each statement is idempotent under the cascade-replace
- * strategy, so a mid-flight failure is healed by the next save.
- */
-async function withTransaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T> {
-  if (supportsTransactions) {
-    return (db as unknown as NodePgDatabase<typeof schema>).transaction(fn);
-  }
-  return fn(db);
-}
-
 export interface ActionResult {
   success: boolean;
   error?: string;
@@ -130,7 +113,7 @@ export async function persistWarehouseLayout(
   const valid = parsed.data;
 
   try {
-    await withTransaction(async (tx) => {
+    await db.transaction(async (tx) => {
       // 0. Query existing blueprint to preserve createdBy if already set
       const existing = await tx
         .select({ createdBy: schema.warehouseBlueprints.createdBy })
@@ -335,7 +318,16 @@ export async function listWarehouseLayouts(): Promise<BlueprintSummary[]> {
     .from(schema.warehouseBlueprints)
     .leftJoin(schema.users, eq(schema.warehouseBlueprints.updatedBy, schema.users.id));
 
-  const rackRows = await db.select().from(schema.racks);
+  const rackCounts = await db
+    .select({
+      blueprintId: schema.racks.blueprintId,
+      total: count(),
+    })
+    .from(schema.racks)
+    .groupBy(schema.racks.blueprintId);
+
+  const rackCountMap = new Map(rackCounts.map((r) => [r.blueprintId, r.total]));
+
   const binCounts = await db
     .select({
       blueprintId: schema.inventoryBins.blueprintId,
@@ -349,7 +341,7 @@ export async function listWarehouseLayouts(): Promise<BlueprintSummary[]> {
   return metas.map((m) => ({
     id: m.id,
     name: m.name,
-    rackCount: rackRows.filter((r) => r.blueprintId === m.id).length,
+    rackCount: rackCountMap.get(m.id) ?? 0,
     binCount: binCountMap.get(m.id) ?? 0,
     updatedAt: m.updatedAt.toISOString(),
     updatedBy: m.updatedBy,
@@ -379,6 +371,11 @@ export async function deleteWarehouseLayout(
   try {
     // Racks/bins cascade via FK onDelete
     await db.delete(schema.warehouseBlueprints).where(eq(schema.warehouseBlueprints.id, blueprintId));
+    try {
+      revalidatePath('/');
+    } catch {
+      // In non-Next server environments (e.g. CLI scripts), revalidatePath may no-op
+    }
     return { success: true };
   } catch (error) {
     console.error('deleteWarehouseLayout failed:', error);

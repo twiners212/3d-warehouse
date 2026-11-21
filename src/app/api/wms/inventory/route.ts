@@ -4,17 +4,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWarehouseLayout } from '@/app/actions/layout-actions';
 
-const WMS_SECRET_TOKEN = process.env.WMS_API_KEY || 'wms-demo-secret-key';
+function getWmsSecretToken(): string {
+  const token = process.env.WMS_API_KEY;
+  if (!token) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Security Error: WMS_API_KEY environment variable is mandatory in production.');
+    }
+    return 'wms-demo-secret-key';
+  }
+  return token;
+}
 
 function authenticateRequest(req: NextRequest): boolean {
+  const secretToken = getWmsSecretToken();
   const isDev = process.env.NODE_ENV !== 'production';
   const authHeader = req.headers.get('authorization');
   if (!authHeader) {
     const tokenQuery = req.nextUrl.searchParams.get('token');
-    return tokenQuery === WMS_SECRET_TOKEN || (isDev && tokenQuery === 'demo');
+    return tokenQuery === secretToken || (isDev && tokenQuery === 'demo');
   }
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  return token === WMS_SECRET_TOKEN || (isDev && token === 'demo');
+  return token === secretToken || (isDev && token === 'demo');
 }
 
 export async function GET(req: NextRequest) {

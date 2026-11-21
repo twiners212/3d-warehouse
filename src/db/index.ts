@@ -1,12 +1,11 @@
 // Fulfills PRD.md Section 3.1 Connection Setup
-// Neon serverless client over the HTTP driver for sub-millisecond cold starts.
-// Local development falls back to node-postgres so a dummy Postgres container
-// (or any standard postgres:// URL) works without a Neon account.
+// Neon serverless client with Pool for transaction support and sub-millisecond cold starts.
+// Local development falls back to node-postgres Pool so a standard Postgres URL works offline.
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle as drizzleNeonHttp } from 'drizzle-orm/neon-http';
+import { Pool as NeonPool } from '@neondatabase/serverless';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzleNodePg } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { Pool as NodePgPool } from 'pg';
 import * as schema from './schema';
 
 const connectionString = process.env.DATABASE_URL;
@@ -22,14 +21,12 @@ function isLocalDatabase(url: string): boolean {
 }
 
 export const db = isLocalDatabase(connectionString)
-  ? drizzleNodePg(new Pool({ connectionString }), { schema })
-  : drizzleNeonHttp(neon(connectionString), { schema });
+  ? drizzleNodePg(new NodePgPool({ connectionString }), { schema })
+  : drizzleNeon(new NeonPool({ connectionString }), { schema });
 
 /**
- * Whether the active driver supports interactive db.transaction().
- * neon-http does NOT — persistence falls back to batched statements
- * (PROGRESS.md Phase 1 note; PRD.md Section 5 batch semantics).
+ * Both node-postgres Pool and @neondatabase/serverless Pool support interactive db.transaction().
  */
-export const supportsTransactions = isLocalDatabase(connectionString);
+export const supportsTransactions = true;
 
 export type DatabaseClient = typeof db;

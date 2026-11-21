@@ -4,8 +4,9 @@
 // R3F Canvas root wiring lights, floor, racks, ghost placement, gizmo,
 // and camera controller, plus floating Viewport HUD Toolbar & Quick-Tips.
 
-import { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useEffect, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { CanvasErrorBoundary } from './CanvasErrorBoundary';
 import { ProceduralRack } from './ProceduralRack';
 import { ProceduralStructure } from './ProceduralStructure';
 import { ZoneFootprint } from './ZoneFootprint';
@@ -25,6 +26,31 @@ import { ProceduralVerticalConnector } from './ProceduralVerticalConnector';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 
+function WebGLContextWatcher() {
+  const { gl } = useThree();
+  const [, setThrowError] = useState();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    if (!canvas) return;
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      console.warn('[WebGLContextWatcher] WebGL context loss detected on canvas DOM element.');
+      setThrowError(() => {
+        throw new Error('Konteks grafis WebGL terputus (GPU driver reset atau penutupan konteks oleh browser).');
+      });
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+    };
+  }, [gl]);
+
+  return null;
+}
+
 function SceneContent() {
   const racks = useEditorStore((s) => s.racks);
   const structuralElements = useEditorStore((s) => s.structuralElements);
@@ -39,6 +65,7 @@ function SceneContent() {
 
   return (
     <>
+      <WebGLContextWatcher />
       <color attach="background" args={[isLight ? 0xf1f5f9 : 0x0b1120]} />
       <hemisphereLight
         intensity={isLight ? 1.0 : 0.7}
@@ -112,17 +139,19 @@ export function WarehouseCanvas({ onOpenControls }: { onOpenControls?: () => voi
 
   return (
     <div data-tour="3d-canvas" className="relative h-full w-full overflow-hidden">
-      <Canvas
-        shadows={graphicsQuality.shadows}
-        gl={{ antialias: graphicsQuality.antialias }}
-        dpr={[1, 2]}
-        camera={{ position: [40, 35, 45], fov: 55, near: 0.1, far: 500 }}
-        className="touch-none"
-      >
-        <Suspense fallback={null}>
-          <SceneContent />
-        </Suspense>
-      </Canvas>
+      <CanvasErrorBoundary>
+        <Canvas
+          shadows={graphicsQuality.shadows}
+          gl={{ antialias: graphicsQuality.antialias }}
+          dpr={[1, 2]}
+          camera={{ position: [40, 35, 45], fov: 55, near: 0.1, far: 500 }}
+          className="touch-none"
+        >
+          <Suspense fallback={null}>
+            <SceneContent />
+          </Suspense>
+        </Canvas>
+      </CanvasErrorBoundary>
 
       {/* 2D Marquee Selection Box Overlay */}
       <MarqueeOverlayDOM />

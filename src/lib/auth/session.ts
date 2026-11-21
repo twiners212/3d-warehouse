@@ -21,6 +21,13 @@ export async function createSession(userId: string): Promise<{ token: string; ex
     expiresAt,
   });
 
+  // Opportunistic purge of expired sessions (~10% chance) to prevent table bloat
+  if (Math.random() < 0.1) {
+    purgeExpiredSessions().catch((err) => {
+      console.warn('[Session] Background expired session purge failed:', err);
+    });
+  }
+
   return { token, expiresAt };
 }
 

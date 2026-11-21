@@ -9,6 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:smoke": "tsx scripts/smoke-store.ts",
+    "test:store": "tsx scripts/smoke-store.ts",
+    "test:reliability": "tsx scripts/smoke-reliability-hardening.ts",
     "test:snapping": "tsx scripts/smoke-snapping.ts",
     "test:persistence": "tsx scripts/smoke-persistence.ts",
     "test:wms": "tsx scripts/smoke-bins-wms.ts",
